@@ -1,31 +1,47 @@
 import streamlit as st
-from gtts import gTTS
-import os
 
-def main():
-    st.title("Text to Speech Converter")
-    st.write("Enter your text below, select a language, and click the button to convert it into speech.")
+# Initial balance (this will reset every time the app restarts)
+if "balance" not in st.session_state:
+    st.session_state.balance = 1000  # Starting balance
 
-    # Input Text Area
-    text_input = st.text_area("Enter text to convert to speech", placeholder="Type your text here...")
+# Function to display balance
+def check_balance():
+    st.success(f"Your current balance is: ${st.session_state.balance}")
 
-    # Language Selection
-    languages = {'English': 'en', 'Spanish': 'es', 'French': 'fr', 'German': 'de', 'Hindi': 'hi'}
-    language = st.selectbox("Select Language", options=list(languages.keys()))
+# Function to deposit money
+def deposit(amount):
+    if amount > 0:
+        st.session_state.balance += amount
+        st.success(f"${amount} deposited successfully!")
+    else:
+        st.error("Enter a valid amount to deposit.")
 
-    # Convert to Speech Button
-    if st.button("Convert to Speech"):
-        if text_input.strip():
-            tts = gTTS(text=text_input, lang=languages[language])
-            audio_file = "output.mp3"
-            tts.save(audio_file)
-            st.audio(audio_file, format="audio/mp3", start_time=0)
-        else:
-            st.error("Please enter some text to convert.")
+# Function to withdraw money
+def withdraw(amount):
+    if amount > st.session_state.balance:
+        st.error("Insufficient funds!")
+    elif amount > 0:
+        st.session_state.balance -= amount
+        st.success(f"${amount} withdrawn successfully!")
+    else:
+        st.error("Enter a valid amount to withdraw.")
 
-    # Clear Button
-    if st.button("Clear Text"):
-        st.experimental_rerun()
+# Streamlit UI
+st.title("ATM Simulator")
+st.write("Welcome to the ATM Simulator. Manage your virtual account here.")
 
-if __name__ == "__main__":
-    main()
+# Action selection
+action = st.selectbox("Choose an action:", ["Check Balance", "Deposit Money", "Withdraw Money"])
+
+if action == "Check Balance":
+    st.button("Check Balance", on_click=check_balance)
+
+elif action == "Deposit Money":
+    deposit_amount = st.number_input("Enter amount to deposit:", min_value=0, step=10)
+    if st.button("Deposit"):
+        deposit(deposit_amount)
+
+elif action == "Withdraw Money":
+    withdraw_amount = st.number_input("Enter amount to withdraw:", min_value=0, step=10)
+    if st.button("Withdraw"):
+        withdraw(withdraw_amount)
